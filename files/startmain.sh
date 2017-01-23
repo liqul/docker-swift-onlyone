@@ -70,7 +70,7 @@ fi
 
 
 echo "Starting rsync..."
-service rsync start
+RUN	sed -i 's/RSYNC_ENABLE=false/RSYNC_ENABLE=true/' /etc/default/rsync
 
 
 # Start supervisord
