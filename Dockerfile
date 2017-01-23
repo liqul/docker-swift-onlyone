@@ -30,6 +30,8 @@ ADD files/container-server.conf /etc/swift/container-server.conf
 ADD files/startmain.sh /usr/local/bin/startmain.sh
 RUN chmod 755 /usr/local/bin/startmain.sh
 
+RUN sed -i 's/RSYNC_ENABLE=false/RSYNC_ENABLE=true/' /etc/default/rsync
+
 EXPOSE 8080
 
 CMD /usr/local/bin/startmain.sh

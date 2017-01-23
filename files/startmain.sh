@@ -69,10 +69,6 @@ if [ ! -z "${SWIFT_USER_PASSWORD}" ]; then
 fi
 
 
-echo "Starting rsync..."
-RUN	sed -i 's/RSYNC_ENABLE=false/RSYNC_ENABLE=true/' /etc/default/rsync
-
-
 # Start supervisord
 echo "Starting supervisord..."
 /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
@@ -82,11 +78,11 @@ echo "Starting supervisord..."
 #
 
 # sleep waiting for rsyslog to come up under supervisord
-sleep 3
+# sleep 3
 
-echo "Starting to tail /var/log/syslog...(hit ctrl-c if you are starting the container in a bash shell)"
+# echo "Starting to tail /var/log/syslog...(hit ctrl-c if you are starting the container in a bash shell)"
 
-tail -n 0 -f /var/log/syslog
+# tail -n 0 -f /var/log/syslog
 
 
 
