@@ -22,6 +22,7 @@ ADD files/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # not sure how valuable dispersion will be...
 ADD files/dispersion.conf /etc/swift/dispersion.conf
 ADD files/rsyncd.conf /etc/rsyncd.conf
+ADD files/rsync /etc/default/rsync
 ADD files/swift.conf /etc/swift/swift.conf
 ADD files/proxy-server.conf /etc/swift/proxy-server.conf
 ADD files/account-server.conf /etc/swift/account-server.conf
