@@ -1,4 +1,3 @@
-
 SWIFT_USER_PASSWORD=testing
 CNTR=onlyone
 CNTR_IMAGE=swift-onlyone
@@ -7,25 +6,25 @@ DATA_CNTR_IMAGE=busybox
 LOCAL_PORT=12345
 DOCKER_PORT=8080
 
-all: build delete run_swift_data run_swift
+all: build stop delete run_new ps
 
-redeploy: delete build run_swift
-
-run_swift_data:
+run:
 	-docker run \
-  	-v /srv \
-	--name $(DATA_CNTR) \
-    $(DATA_CNTR_IMAGE)	
+		-d \
+		--name $(CNTR) \
+  	-v /srv:/srv:rw \
+  	-p $(LOCAL_PORT):$(DOCKER_PORT) \
+  	-e DELETE=0 \
+    $(CNTR_IMAGE)	
 
-run_swift:
-	docker run \
-	--name $(CNTR) \
-	--hostname $(CNTR) \
-	-e "SWIFT_USER_PASSWORD=$(SWIFT_USER_PASSWORD)" \
-	-d \
-	-p $(LOCAL_PORT):$(DOCKER_PORT) \
-	--volumes-from $(DATA_CNTR) \
-	-t $(CNTR_IMAGE) 
+run_new:
+	-docker run \
+	  -d \
+	  --name $(CNTR) \
+  	-v /srv:/srv:rw \
+  	-p $(LOCAL_PORT):$(DOCKER_PORT) \
+  	-e DELETE=1 \
+    $(CNTR_IMAGE)
 
 delete:
 	-docker rm -f $(CNTR) 
@@ -38,3 +37,9 @@ build:
 
 logs:
 	docker logs $(CNTR) 
+
+stop:
+	docker stop $(CNTR)
+
+ps:
+	docker ps

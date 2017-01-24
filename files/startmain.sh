@@ -4,16 +4,29 @@
 # Make the rings if they don't exist already
 #
 
+# References
+# 1. The deployment guide: http://docs.openstack.org/developer/swift/deployment_guide.html
+# 2. The installation guide: http://docs.openstack.org/developer/swift/howto_installmultinode.html
+
 # These can be set with docker run -e VARIABLE=X at runtime
 SWIFT_PART_POWER=${SWIFT_PART_POWER:-7}
 SWIFT_PART_HOURS=${SWIFT_PART_HOURS:-1}
 SWIFT_REPLICAS=${SWIFT_REPLICAS:-1}
 SWIFT_PARTITION=${PARTITION:-partition1}
+DELETE_EXIST_FILES=${DELETE:-0}
+
+# Delete all old files for a new setup
+if [ ${DELETE_EXIST_FILES} = "1" ]; then
+	echo "Deleting old files under /srv for a new setup..."  
+    rm -rf /srv/*.builder
+    rm -rf /srv/*.gz
+fi  
 
 if [ -e /srv/account.builder ]; then
 	echo "Ring files already exist in /srv, copying them to /etc/swift..."
 	cp /srv/*.builder /etc/swift/
 	cp /srv/*.gz /etc/swift/
+	cp -rf /srv/*.conf /etc/swift/
 fi
 
 # This comes from a volume, so need to chown it here, not sure of a better way
@@ -32,21 +45,28 @@ if [ ! -e /etc/swift/account.builder ]; then
 
 	echo "No existing ring files, creating them..."
 
+	# We need to add all storage nodes to the account, container, and object rings
+	# Change here to attach more nodes
 	swift-ring-builder object.builder create ${SWIFT_PART_POWER} ${SWIFT_REPLICAS} ${SWIFT_PART_HOURS}
-	swift-ring-builder object.builder add r1z1-127.0.0.1:6010/${SWIFT_PARTITION} 1
+	swift-ring-builder object.builder add --region 1 --zone 1 --ip 127.0.0.1 --port 6010 --device ${SWIFT_PARTITION} --weight 100
 	swift-ring-builder object.builder rebalance
 	swift-ring-builder container.builder create ${SWIFT_PART_POWER} ${SWIFT_REPLICAS} ${SWIFT_PART_HOURS}
-	swift-ring-builder container.builder add r1z1-127.0.0.1:6011/${SWIFT_PARTITION} 1
+	swift-ring-builder container.builder add --region 1 --zone 1 --ip 127.0.0.1 --port 6011 --device ${SWIFT_PARTITION} --weight 100
 	swift-ring-builder container.builder rebalance
 	swift-ring-builder account.builder create ${SWIFT_PART_POWER} ${SWIFT_REPLICAS} ${SWIFT_PART_HOURS}
-	swift-ring-builder account.builder add r1z1-127.0.0.1:6012/${SWIFT_PARTITION} 1
+	swift-ring-builder account.builder add --region 1 --zone 1 --ip 127.0.0.1 --port 6012 --device ${SWIFT_PARTITION} --weight 100
 	swift-ring-builder account.builder rebalance
 
+	# Verify the rings and log to file
+	swift-ring-builder object.builder > /srv/object_ring.log
+	swift-ring-builder container.builder > /srv/container_ring.log
+	swift-ring-builder account.builder > /srv/account_ring.log
+
 	# Back these up for later use
+	# If we have multiple storage nodes, generate these files at the proxy node and distribute them to all other nodes (proxy or storage)
 	echo "Copying ring files to /srv to save them if it's a docker volume..."
 	cp *.gz /srv
 	cp *.builder /srv
-
 fi
 
 # If you are going to put an ssl terminator in front of the proxy, then I believe
@@ -78,11 +98,11 @@ echo "Starting supervisord..."
 #
 
 # sleep waiting for rsyslog to come up under supervisord
-# sleep 3
+sleep 3
 
-# echo "Starting to tail /var/log/syslog...(hit ctrl-c if you are starting the container in a bash shell)"
+echo "Starting to tail /var/log/syslog...(hit ctrl-c if you are starting the container in a bash shell)"
 
-# tail -n 0 -f /var/log/syslog
+tail -n 0 -f /var/log/syslog
 
 
 

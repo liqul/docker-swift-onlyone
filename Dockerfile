@@ -26,12 +26,13 @@ ADD files/swift.conf /etc/swift/swift.conf
 ADD files/proxy-server.conf /etc/swift/proxy-server.conf
 ADD files/account-server.conf /etc/swift/account-server.conf
 ADD files/object-server.conf /etc/swift/object-server.conf
+ADD files/object-expirer.conf /etc/swift/object-expirer.conf
+ADD files/container-reconciler.conf /etc/swift/container-reconciler.conf
 ADD files/container-server.conf /etc/swift/container-server.conf
 ADD files/startmain.sh /usr/local/bin/startmain.sh
 RUN chmod 755 /usr/local/bin/startmain.sh
 
 RUN sed -i 's/RSYNC_ENABLE=false/RSYNC_ENABLE=true/' /etc/default/rsync
-
 EXPOSE 8080
 
 CMD /usr/local/bin/startmain.sh
